@@ -5,40 +5,21 @@ function parseQuery(query) {
 
   const whereSplit = query.split(/\sWHERE\s/i);
   query = whereSplit[0];
-  console.log(whereSplit);
 
   const whereClause = whereSplit.length > 1 ? whereSplit[1].trim() : null;
 
-  const joinSplit = query.split(/\sINNER JOIN\s/i);
+  const joinSplit = query.split(/\s(INNER|LEFT|RIGHT) JOIN\s/i);
   selectPart = joinSplit[0].trim();
-  console.log(joinSplit);
-
-  const joinPart = joinSplit.length > 1 ? joinSplit[1].trim() : null;
 
   const selectRegex = /^SELECT\s(.+?)\sFROM\s(.+)/i;
   const selectMatch = selectPart.match(selectRegex);
-  console.log(selectMatch);
   if (!selectMatch) {
     throw new Error('Invalid SELECT format');
   }
 
   const [, fields, table] = selectMatch;
 
-  let joinTable = null,
-    joinCondition = null;
-  if (joinPart) {
-    const joinRegex = /^(.+?)\sON\s([\w.]+)\s*=\s*([\w.]+)/i;
-    const joinMatch = joinPart.match(joinRegex);
-    if (!joinMatch) {
-      throw new Error('Invalid JOIN format');
-    }
-
-    joinTable = joinMatch[1].trim();
-    joinCondition = {
-      left: joinMatch[2].trim(),
-      right: joinMatch[3].trim(),
-    };
-  }
+  const { joinType, joinCondition, joinTable } = parseJoinClause(query);
 
   let whereClauses = [];
   if (whereClause) {
@@ -49,6 +30,7 @@ function parseQuery(query) {
     fields: fields.split(',').map((field) => field.trim()),
     table: table.trim(),
     whereClauses,
+    joinType,
     joinTable,
     joinCondition,
   };
@@ -67,13 +49,36 @@ function parseWhereClause(whereString) {
   });
 }
 
-function test() {
-    console.log(
-      parseQuery(
-        'SELECT student.name, enrollment.course FROM student INNER JOIN enrollment ON student.id = enrollment.student_id WHERE student.age > 20'
-      )
-    );
-}
-// test()
+function parseJoinClause(query) {
+  const joinRegex =
+    /\s(INNER|LEFT|RIGHT) JOIN\s(.+?)\sON\s([\w.]+)\s*=\s*([\w.]+)/i;
+  const joinMatch = query.match(joinRegex);
 
-module.exports = parseQuery;
+  if (joinMatch) {
+    return {
+      joinType: joinMatch[1].trim(),
+      joinTable: joinMatch[2].trim(),
+      joinCondition: {
+        left: joinMatch[3].trim(),
+        right: joinMatch[4].trim(),
+      },
+    };
+  }
+
+  return {
+    joinType: null,
+    joinTable: null,
+    joinCondition: null,
+  };
+}
+
+function test() {
+  console.log(
+    parseQuery(
+      'SELECT student.name, enrollment.course FROM student INNER JOIN enrollment ON student.id = enrollment.student_id WHERE student.age > 20'
+    )
+  );
+}
+test();
+
+module.exports = { parseQuery, parseJoinClause };
