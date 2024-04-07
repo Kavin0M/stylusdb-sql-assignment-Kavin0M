@@ -3,9 +3,21 @@ function parseQuery(query) {
 
   let selectPart, fromPart;
 
+  const orderByRegex = /(.+)\sORDER BY\s(.+)/i;
+  const orderByMatch = query.match(orderByRegex);
+  query = orderByMatch?.length > 1 ? orderByMatch[1].trim() : query
+
+  let orderByFields = null;
+  if (orderByMatch) {
+    orderByFields = orderByMatch[2].split(",").map((field) => {
+      const [fieldName, order] = field.trim().split(/\s+/);
+      return { fieldName, order: order ? order.toUpperCase() : "ASC" };
+    });
+  }
+
   const groupByRegex = /(.+)\sGROUP BY\s(.+)/i;
   const groupByMatch = query.match(groupByRegex);
-  query = groupByMatch ? groupByMatch[1].trim() : query;
+  query = groupByMatch?.length > 1 ? groupByMatch[1].trim() : query;
 
   let groupByFields = null;
   if (groupByMatch) {
@@ -48,6 +60,7 @@ function parseQuery(query) {
     joinCondition,
     groupByFields,
     hasAggregateWithoutGroupBy: hasAggregate && !groupByFields,
+    orderByFields,
   };
 }
 
@@ -88,11 +101,7 @@ function parseJoinClause(query) {
 }
 
 function test() {
-  console.log(
-    parseQuery(
-      'SELECT student_id, COUNT(*) FROM enrollment GROUP BY student_id'
-    )
-  );
+  console.log(parseQuery("SELECT name FROM student ORDER BY name ASC"));
 }
 test();
 

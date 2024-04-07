@@ -13,14 +13,14 @@ test('Parse SQL Query', () => {
   const query = 'SELECT id, name FROM student';
   const parsed = parseQuery(query);
   expect(parsed).toEqual({
-    fields: ['id', 'name'],
-    table: 'student',
+    fields: ["id", "name"],
+    table: "student",
     whereClauses: [],
     joinType: null,
     joinCondition: null,
     joinTable: null,
     groupByFields: null,
     hasAggregateWithoutGroupBy: false,
-
+    orderByFields: null,
   });
 });

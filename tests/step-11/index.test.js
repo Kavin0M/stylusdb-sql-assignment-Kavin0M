@@ -659,6 +659,7 @@ test('Execute SQL Query with ORDER BY and WHERE', async () => {
 test('Execute SQL Query with ORDER BY and GROUP BY', async () => {
     const query = 'SELECT COUNT(id) as count, age FROM student GROUP BY age ORDER BY age DESC';
     const result = await executeSELECTQuery(query);
+    console.log(result)
 
     expect(result).toStrictEqual([
         { age: '30', 'COUNT(id) as count': 1 },

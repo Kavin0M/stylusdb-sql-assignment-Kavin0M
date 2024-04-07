@@ -100,7 +100,6 @@ function createResultRow(
 
   return resultRow;
 }
-
 async function executeSELECTQuery(query) {
   const {
     fields,
@@ -111,6 +110,7 @@ async function executeSELECTQuery(query) {
     joinCondition,
     groupByFields,
     hasAggregateWithoutGroupBy,
+    orderByFields,
   } = parseQuery(query);
   let data = await readCSV(`${table}.csv`);
 
@@ -132,7 +132,7 @@ async function executeSELECTQuery(query) {
     }
   }
   // Apply WHERE clause filtering after JOIN (or on the original data if no join)
-  const filteredData =
+  let filteredData =
     whereClauses.length > 0
       ? data.filter((row) =>
           whereClauses.every((clause) => evaluateCondition(row, clause))
@@ -140,12 +140,11 @@ async function executeSELECTQuery(query) {
       : data;
 
   let groupResults = filteredData;
-  console.log({ hasAggregateWithoutGroupBy });
   if (hasAggregateWithoutGroupBy) {
     // Special handling for queries like 'SELECT COUNT(*) FROM table'
     const result = {};
 
-    console.log({ filteredData });
+    // console.log({ filteredData })
 
     fields.forEach((field) => {
       const match = /(\w+)\((\*|\w+)\)/.exec(field);
@@ -187,10 +186,34 @@ async function executeSELECTQuery(query) {
     // Add more cases here if needed for other aggregates
   } else if (groupByFields) {
     groupResults = applyGroupBy(filteredData, groupByFields, fields);
+
+    // Order them by the specified fields
+    let orderedResults = groupResults;
+    if (orderByFields) {
+      orderedResults = groupResults.sort((a, b) => {
+        for (let { fieldName, order } of orderByFields) {
+          if (a[fieldName] < b[fieldName]) return order === "ASC" ? -1 : 1;
+          if (a[fieldName] > b[fieldName]) return order === "ASC" ? 1 : -1;
+        }
+        return 0;
+      });
+    }
     return groupResults;
   } else {
+    // Order them by the specified fields
+    let orderedResults = groupResults;
+    if (orderByFields) {
+      orderedResults = groupResults.sort((a, b) => {
+        for (let { fieldName, order } of orderByFields) {
+          if (a[fieldName] < b[fieldName]) return order === "ASC" ? -1 : 1;
+          if (a[fieldName] > b[fieldName]) return order === "ASC" ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+
     // Select the specified fields
-    return groupResults.map((row) => {
+    return orderedResults.map((row) => {
       const selectedRow = {};
       fields.forEach((field) => {
         // Assuming 'field' is just the column name without table prefix
@@ -326,5 +349,16 @@ function applyGroupBy(data, groupByFields, aggregateFunctions) {
     return finalGroup;
   });
 }
+
+(async () => {
+  try {
+    const data = await executeSELECTQuery(
+      "SELECT COUNT(id) as count, age FROM student GROUP BY age ORDER BY age DESC"
+    );
+    console.log("Result:", data);
+  } catch (error) {
+    console.error("Error:", error);
+  }
+})();
 
 module.exports = executeSELECTQuery;
