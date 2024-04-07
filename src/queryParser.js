@@ -91,8 +91,12 @@ function parseWhereClause(whereString) {
   return whereString.split(/ AND | OR /i).map((conditionString) => {
     if (conditionString.includes(" LIKE ")) {
       const [field, pattern] = conditionString.split(/\sLIKE\s/i);
-      console.log(field, pattern)
-      return { field: field.trim(), operator: "LIKE", value: pattern.trim().replace(/['"]/g, '')  };
+      console.log(field, pattern);
+      return {
+        field: field.trim(),
+        operator: "LIKE",
+        value: pattern.trim().replace(/['"]/g, ""),
+      };
     } else {
       const match = conditionString.match(conditionRegex);
       if (match) {
@@ -144,13 +148,36 @@ function parseInsertQuery(query) {
   };
 }
 
+function parseDeleteQuery(query) {
+  const deleteRegex = /DELETE FROM (.+) WHERE (.+)/i;
+  const match = query.match(deleteRegex);
+
+  if (!match) {
+    throw new Error("Invalid DELETE syntax");
+  }
+
+  const [, table, whereClause] = match;
+
+  let whereClauses = [];
+  if (whereClause) {
+    whereClauses = parseWhereClause(whereClause);
+  }
+
+  return {
+    type: "DELETE",
+    table,
+    whereClauses,
+  };
+}
+
 function test() {
-  console.log(
-    parseINSERTQuery(
-      "INSERT INTO grades (student_id, course, grade) VALUES ('4', 'Physics', 'A')"
-    )
-  );
+  console.log(parseDeleteQuery("DELETE FROM courses WHERE course_id = '2'"));
 }
 // test();
 
-module.exports = { parseSelectQuery, parseJoinClause, parseInsertQuery };
+module.exports = {
+  parseSelectQuery,
+  parseJoinClause,
+  parseInsertQuery,
+  parseDeleteQuery,
+};
