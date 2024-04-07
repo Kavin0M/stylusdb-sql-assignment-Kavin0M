@@ -14,12 +14,14 @@ test('Parse SQL Query', () => {
   const query = 'SELECT id, name FROM student';
   const parsed = parseQuery(query);
   expect(parsed).toEqual({
-    fields: ['id', 'name'],
-    table: 'student',
+    fields: ["id", "name"],
+    table: "student",
     whereClauses: [],
     joinType: null,
     joinCondition: null,
     joinTable: null,
+    groupByFields: null,
+    hasAggregateWithoutGroupBy: false,
   });
 });
 
@@ -37,18 +39,20 @@ test('Parse SQL Query with WHERE Clause', () => {
   const query = 'SELECT id, name FROM student WHERE age = 25';
   const parsed = parseQuery(query);
   expect(parsed).toEqual({
-    fields: ['id', 'name'],
-    table: 'student',
+    fields: ["id", "name"],
+    table: "student",
     whereClauses: [
       {
-        field: 'age',
-        operator: '=',
-        value: '25',
+        field: "age",
+        operator: "=",
+        value: "25",
       },
     ],
     joinType: null,
     joinCondition: null,
     joinTable: null,
+    groupByFields: null,
+    hasAggregateWithoutGroupBy: false,
   });
 });
 
@@ -65,23 +69,25 @@ test('Parse SQL Query with Multiple WHERE Clauses', () => {
   const query = 'SELECT id, name FROM student WHERE age = 30 AND name = John';
   const parsed = parseQuery(query);
   expect(parsed).toEqual({
-    fields: ['id', 'name'],
-    table: 'student',
+    fields: ["id", "name"],
+    table: "student",
     whereClauses: [
       {
-        field: 'age',
-        operator: '=',
-        value: '30',
+        field: "age",
+        operator: "=",
+        value: "30",
       },
       {
-        field: 'name',
-        operator: '=',
-        value: 'John',
+        field: "name",
+        operator: "=",
+        value: "John",
       },
     ],
     joinType: null,
     joinCondition: null,
     joinTable: null,
+    groupByFields: null,
+    hasAggregateWithoutGroupBy: false,
   });
 });
 
@@ -111,12 +117,14 @@ test('Parse SQL Query with INNER JOIN', async () => {
     'SELECT student.name, enrollment.course FROM student INNER JOIN enrollment ON student.id=enrollment.student_id';
   const result = await parseQuery(query);
   expect(result).toEqual({
-    fields: ['student.name', 'enrollment.course'],
-    table: 'student',
+    fields: ["student.name", "enrollment.course"],
+    table: "student",
     whereClauses: [],
-    joinType: 'INNER',
-    joinTable: 'enrollment',
-    joinCondition: { left: 'student.id', right: 'enrollment.student_id' },
+    joinType: "INNER",
+    joinTable: "enrollment",
+    joinCondition: { left: "student.id", right: "enrollment.student_id" },
+    groupByFields: null,
+    hasAggregateWithoutGroupBy: false,
   });
 });
 
@@ -125,12 +133,14 @@ test('Parse SQL Query with INNER JOIN and WHERE Clause', async () => {
     'SELECT student.name, enrollment.course FROM student INNER JOIN enrollment ON student.id = enrollment.student_id WHERE student.age > 20';
   const result = await parseQuery(query);
   expect(result).toEqual({
-    fields: ['student.name', 'enrollment.course'],
-    table: 'student',
-    whereClauses: [{ field: 'student.age', operator: '>', value: '20' }],
-    joinType: 'INNER',
-    joinTable: 'enrollment',
-    joinCondition: { left: 'student.id', right: 'enrollment.student_id' },
+    fields: ["student.name", "enrollment.course"],
+    table: "student",
+    whereClauses: [{ field: "student.age", operator: ">", value: "20" }],
+    joinType: "INNER",
+    joinTable: "enrollment",
+    joinCondition: { left: "student.id", right: "enrollment.student_id" },
+    groupByFields: null,
+    hasAggregateWithoutGroupBy: false,
   });
 });
 

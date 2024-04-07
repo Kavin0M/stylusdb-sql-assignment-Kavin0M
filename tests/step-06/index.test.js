@@ -14,12 +14,14 @@ test('Parse SQL Query', () => {
   const query = 'SELECT id, name FROM sample';
   const parsed = parseQuery(query);
   expect(parsed).toEqual({
-    fields: ['id', 'name'],
-    table: 'sample',
+    fields: ["id", "name"],
+    table: "sample",
     whereClauses: [],
     joinType: null,
     joinCondition: null,
     joinTable: null,
+    groupByFields: null,
+    hasAggregateWithoutGroupBy: false,
   });
 });
 
@@ -37,18 +39,20 @@ test('Parse SQL Query with WHERE Clause', () => {
   const query = 'SELECT id, name FROM student WHERE age = 25';
   const parsed = parseQuery(query);
   expect(parsed).toEqual({
-    fields: ['id', 'name'],
-    table: 'student',
+    fields: ["id", "name"],
+    table: "student",
     whereClauses: [
       {
-        field: 'age',
-        operator: '=',
-        value: '25',
+        field: "age",
+        operator: "=",
+        value: "25",
       },
     ],
     joinType: null,
     joinCondition: null,
     joinTable: null,
+    groupByFields: null,
+    hasAggregateWithoutGroupBy: false,
   });
 });
 
@@ -65,23 +69,25 @@ test('Parse SQL Query with Multiple WHERE Clauses', () => {
   const query = 'SELECT id, name FROM student WHERE age = 30 AND name = John';
   const parsed = parseQuery(query);
   expect(parsed).toEqual({
-    fields: ['id', 'name'],
-    table: 'student',
+    fields: ["id", "name"],
+    table: "student",
     whereClauses: [
       {
-        field: 'age',
-        operator: '=',
-        value: '30',
+        field: "age",
+        operator: "=",
+        value: "30",
       },
       {
-        field: 'name',
-        operator: '=',
-        value: 'John',
+        field: "name",
+        operator: "=",
+        value: "John",
       },
     ],
     joinType: null,
     joinCondition: null,
     joinTable: null,
+    groupByFields: null,
+    hasAggregateWithoutGroupBy: false,
   });
 });
 
