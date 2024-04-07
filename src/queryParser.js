@@ -4,6 +4,12 @@ function parseQuery(query) {
 
     let selectPart, fromPart;
 
+    let isDistinct = false;
+    if (query.toUpperCase().includes("SELECT DISTINCT")) {
+      isDistinct = true;
+      query = query.replace("SELECT DISTINCT", "SELECT");
+    }
+
     const limitRegex = /(.+)\sLIMIT\s(\d+)/i;
     const limitMatch = query.match(limitRegex);
     query = limitMatch?.length > 1 ? limitMatch[1].trim() : query;
@@ -72,6 +78,7 @@ function parseQuery(query) {
       hasAggregateWithoutGroupBy: hasAggregate && !groupByFields,
       orderByFields,
       limit,
+      isDistinct
     };
   } catch (error) {
     throw new Error(`Query parsing error: ${error.message}`);

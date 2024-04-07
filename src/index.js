@@ -113,6 +113,7 @@ async function executeSELECTQuery(query) {
       hasAggregateWithoutGroupBy,
       orderByFields,
       limit,
+      isDistinct
     } = parseQuery(query);
     let data = await readCSV(`${table}.csv`);
 
@@ -226,6 +227,17 @@ async function executeSELECTQuery(query) {
 
       if (limit !== null) {
         result = result.slice(0, limit);
+      }
+
+      if (isDistinct) {
+        result = [
+          ...new Map(
+            result.map((item) => [
+              fields.map((field) => item[field]).join("|"),
+              item,
+            ])
+          ).values(),
+        ];
       }
 
       return result;
