@@ -3,9 +3,18 @@ function parseQuery(query) {
 
   let selectPart, fromPart;
 
+  const limitRegex = /(.+)\sLIMIT\s(\d+)/i;
+  const limitMatch = query.match(limitRegex);
+  query = limitMatch?.length > 1 ? limitMatch[1].trim() : query
+
+  let limit = null;
+  if (limitMatch) {
+    limit = parseInt(limitMatch[2]);
+  }
+
   const orderByRegex = /(.+)\sORDER BY\s(.+)/i;
   const orderByMatch = query.match(orderByRegex);
-  query = orderByMatch?.length > 1 ? orderByMatch[1].trim() : query
+  query = orderByMatch?.length > 1 ? orderByMatch[1].trim() : query;
 
   let orderByFields = null;
   if (orderByMatch) {
@@ -61,6 +70,7 @@ function parseQuery(query) {
     groupByFields,
     hasAggregateWithoutGroupBy: hasAggregate && !groupByFields,
     orderByFields,
+    limit
   };
 }
 
@@ -101,7 +111,9 @@ function parseJoinClause(query) {
 }
 
 function test() {
-  console.log(parseQuery("SELECT name FROM student ORDER BY name ASC"));
+  console.log(
+    parseQuery("SELECT id, name FROM student ORDER BY age DESC LIMIT 2")
+  );
 }
 test();
 

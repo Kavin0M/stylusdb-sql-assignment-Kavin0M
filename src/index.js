@@ -111,6 +111,7 @@ async function executeSELECTQuery(query) {
     groupByFields,
     hasAggregateWithoutGroupBy,
     orderByFields,
+    limit
   } = parseQuery(query);
   let data = await readCSV(`${table}.csv`);
 
@@ -213,7 +214,7 @@ async function executeSELECTQuery(query) {
     }
 
     // Select the specified fields
-    return orderedResults.map((row) => {
+    let result = orderedResults.map((row) => {
       const selectedRow = {};
       fields.forEach((field) => {
         // Assuming 'field' is just the column name without table prefix
@@ -221,6 +222,12 @@ async function executeSELECTQuery(query) {
       });
       return selectedRow;
     });
+
+    if (limit !== null){
+      result = result.slice(0, limit)
+    }
+
+    return result
   }
 }
 
@@ -350,15 +357,15 @@ function applyGroupBy(data, groupByFields, aggregateFunctions) {
   });
 }
 
-(async () => {
-  try {
-    const data = await executeSELECTQuery(
-      "SELECT COUNT(id) as count, age FROM student GROUP BY age ORDER BY age DESC"
-    );
-    console.log("Result:", data);
-  } catch (error) {
-    console.error("Error:", error);
-  }
-})();
+// (async () => {
+//   try {
+//     const data = await executeSELECTQuery(
+//       "SELECT COUNT(id) as count, age FROM student GROUP BY age ORDER BY age DESC"
+//     );
+//     console.log("Result:", data);
+//   } catch (error) {
+//     console.error("Error:", error);
+//   }
+// })();
 
 module.exports = executeSELECTQuery;
