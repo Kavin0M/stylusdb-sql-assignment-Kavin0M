@@ -1,5 +1,5 @@
-const { parseQuery } = require("./queryParser");
-const readCSV = require("./csvReader");
+const { parseSelectQuery, parseInsertQuery } = require("./queryParser");
+const {readCSV, writeCSV} = require("./csvReader");
 
 function performInnerJoin(data, joinData, joinCondition, fields, table) {
   return data.flatMap((mainRow) => {
@@ -114,7 +114,7 @@ async function executeSELECTQuery(query) {
       orderByFields,
       limit,
       isDistinct,
-    } = parseQuery(query);
+    } = parseSelectQuery(query);
     let data = await readCSV(`${table}.csv`);
 
     // Perform INNER JOIN if specified
@@ -377,6 +377,28 @@ function applyGroupBy(data, groupByFields, aggregateFunctions) {
   });
 }
 
+async function executeINSERTQuery(query) {
+  const { table, columns, values } = parseInsertQuery(query);
+  const data = await readCSV(`${table}.csv`);
+
+  const newRow = {};
+  columns.forEach((column, index) => {
+    let value = values[index];
+    if (value.startsWith("'") && value.endsWith("'")) {
+      value = value.substring(1, value.length - 1);
+    }
+    newRow[column] = value;
+  });
+
+  // Add the new row to the data
+  data.push(newRow);
+
+  // Save the updated data back to the CSV file
+  await writeCSV(`${table}.csv`, data); // Implement writeCSV function
+
+  return { message: "Row inserted successfully." };
+}
+
 // (async () => {
 //   try {
 //     const data = await executeSELECTQuery(
@@ -388,4 +410,4 @@ function applyGroupBy(data, groupByFields, aggregateFunctions) {
 //   }
 // })();
 
-module.exports = executeSELECTQuery;
+module.exports = {executeSELECTQuery, executeINSERTQuery};
