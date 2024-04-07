@@ -3,6 +3,19 @@ function parseQuery(query) {
 
   let selectPart, fromPart;
 
+  const groupByRegex = /(.+)\sGROUP BY\s(.+)/i;
+  const groupByMatch = query.match(groupByRegex);
+  query = groupByMatch ? groupByMatch[1].trim() : query;
+
+  let groupByFields = null;
+  if (groupByMatch) {
+    groupByFields = groupByMatch[2].split(",").map((field) => field.trim());
+  }
+
+  const aggregateRegex =
+    /(\bCOUNT\b|\bAVG\b|\bSUM\b|\bMIN\b|\bMAX\b)\s*\(\s*(\*|\w+)\s*\)/i;
+  hasAggregate = aggregateRegex.test(query);
+
   const whereSplit = query.split(/\sWHERE\s/i);
   query = whereSplit[0];
 
@@ -14,7 +27,7 @@ function parseQuery(query) {
   const selectRegex = /^SELECT\s(.+?)\sFROM\s(.+)/i;
   const selectMatch = selectPart.match(selectRegex);
   if (!selectMatch) {
-    throw new Error('Invalid SELECT format');
+    throw new Error("Invalid SELECT format");
   }
 
   const [, fields, table] = selectMatch;
@@ -27,12 +40,14 @@ function parseQuery(query) {
   }
 
   return {
-    fields: fields.split(',').map((field) => field.trim()),
+    fields: fields.split(",").map((field) => field.trim()),
     table: table.trim(),
     whereClauses,
     joinType,
     joinTable,
     joinCondition,
+    groupByFields,
+    hasAggregateWithoutGroupBy: hasAggregate && !groupByFields,
   };
 }
 
@@ -45,7 +60,7 @@ function parseWhereClause(whereString) {
       const [, field, operator, value] = match;
       return { field: field.trim(), operator, value: value.trim() };
     }
-    throw new Error('Invalid WHERE clause format');
+    throw new Error("Invalid WHERE clause format");
   });
 }
 
@@ -75,7 +90,7 @@ function parseJoinClause(query) {
 function test() {
   console.log(
     parseQuery(
-      'SELECT student.name, enrollment.course FROM student INNER JOIN enrollment ON student.id = enrollment.student_id WHERE student.age > 20'
+      'SELECT student_id, COUNT(*) FROM enrollment GROUP BY student_id'
     )
   );
 }
