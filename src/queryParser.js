@@ -78,7 +78,7 @@ function parseQuery(query) {
       hasAggregateWithoutGroupBy: hasAggregate && !groupByFields,
       orderByFields,
       limit,
-      isDistinct
+      isDistinct,
     };
   } catch (error) {
     throw new Error(`Query parsing error: ${error.message}`);
@@ -89,10 +89,16 @@ function parseWhereClause(whereString) {
   const conditionRegex = /(.*?)(=|!=|>|<|>=|<=)(.*)/;
 
   return whereString.split(/ AND | OR /i).map((conditionString) => {
-    const match = conditionString.match(conditionRegex);
-    if (match) {
-      const [, field, operator, value] = match;
-      return { field: field.trim(), operator, value: value.trim() };
+    if (conditionString.includes(" LIKE ")) {
+      const [field, pattern] = conditionString.split(/\sLIKE\s/i);
+      console.log(field, pattern)
+      return { field: field.trim(), operator: "LIKE", value: pattern.trim().replace(/['"]/g, '')  };
+    } else {
+      const match = conditionString.match(conditionRegex);
+      if (match) {
+        const [, field, operator, value] = match;
+        return { field: field.trim(), operator, value: value.trim() };
+      }
     }
     throw new Error("Invalid WHERE clause format");
   });
@@ -123,7 +129,7 @@ function parseJoinClause(query) {
 
 function test() {
   console.log(
-    parseQuery("SELECT id, name FROM student ORDER BY age DESC LIMIT 2")
+    parseQuery("SELECT name FROM student WHERE name LIKE '%Jane%'")
   );
 }
 test();

@@ -113,7 +113,7 @@ async function executeSELECTQuery(query) {
       hasAggregateWithoutGroupBy,
       orderByFields,
       limit,
-      isDistinct
+      isDistinct,
     } = parseQuery(query);
     let data = await readCSV(`${table}.csv`);
 
@@ -273,6 +273,9 @@ function evaluateCondition(row, clause) {
       return rowValue >= conditionValue;
     case "<=":
       return rowValue <= conditionValue;
+    case "LIKE":
+      const regexPattern = "^" + clause.value.replace(/%/g, ".*") + "$";
+      return new RegExp(regexPattern, "i").test(row[clause.field]);
     default:
       throw new Error(`Unsupported operator: ${operator}`);
   }
